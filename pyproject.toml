@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "casei"
+dynamic = ["version"]
+description = "Spatial transcriptomics edge prediction and differential interaction analysis using graph neural networks."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Casei Development Team"},
+]
+keywords = [
+    "spatial-transcriptomics",
+    "graph-neural-networks",
+    "edge-prediction",
+    "single-cell",
+    "bioinformatics",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "anndata>=0.9.0",
+    "matplotlib>=3.5.0",
+    "numpy>=1.21.0",
+    "pandas>=1.4.0",
+    "scanpy>=1.9.0",
+    "scipy>=1.8.0",
+    "torch>=1.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1.0",
+    "pre-commit>=3.0",
+]
+docs = [
+    "sphinx>=6.0",
+    "sphinx-rtd-theme>=1.2",
+    "myst-parser>=2.0",
+    "sphinx-autodoc-typehints>=1.23",
+]
+
+[project.urls]
+Homepage = "https://github.com/casei-dev/casei"
+Documentation = "https://casei.readthedocs.io"
+Repository = "https://github.com/casei-dev/casei"
+Issues = "https://github.com/casei-dev/casei/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "casei._version.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["casei*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "D"]
+ignore = ["D100", "D104"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

@@ -1,3 +1,46 @@
+Metadata-Version: 2.4
+Name: casei
+Version: 0.1.0
+Summary: Spatial transcriptomics edge prediction and differential interaction analysis using graph neural networks.
+Author: Casei Development Team
+License: MIT
+Project-URL: Homepage, https://github.com/casei-dev/casei
+Project-URL: Documentation, https://casei.readthedocs.io
+Project-URL: Repository, https://github.com/casei-dev/casei
+Project-URL: Issues, https://github.com/casei-dev/casei/issues
+Keywords: spatial-transcriptomics,graph-neural-networks,edge-prediction,single-cell,bioinformatics
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: anndata>=0.9.0
+Requires-Dist: matplotlib>=3.5.0
+Requires-Dist: numpy>=1.21.0
+Requires-Dist: pandas>=1.4.0
+Requires-Dist: scanpy>=1.9.0
+Requires-Dist: scipy>=1.8.0
+Requires-Dist: torch>=1.12.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: pre-commit>=3.0; extra == "dev"
+Provides-Extra: docs
+Requires-Dist: sphinx>=6.0; extra == "docs"
+Requires-Dist: sphinx-rtd-theme>=1.2; extra == "docs"
+Requires-Dist: myst-parser>=2.0; extra == "docs"
+Requires-Dist: sphinx-autodoc-typehints>=1.23; extra == "docs"
+Dynamic: license-file
+
 # Casei
 
 **Spatial transcriptomics edge prediction and differential interaction analysis using graph neural networks.**
