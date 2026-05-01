@@ -1,28 +1,32 @@
 """
-Casei: Spatial Transcriptomics Edge Prediction and Analysis
-=============================================================
+Casei: Cellular Interaction Spatial Evolution & Inference
+==========================================================
 
 A Python package for analyzing spatial gene expression data using graph neural networks
-for edge prediction and differential interaction analysis.
+for edge prediction, differential interaction analysis, and program enrichment.
 
 Modules:
 --------
+- tl (tools): Utility functions for preprocessing, analysis, and graph operations
+- pl (plotting): Visualization functions for spatial data and interactions
+- enr (enrichment): Eigendecomposition-based program and GO/pathway enrichment
 - models: Neural network models for edge prediction
-- plotting: Visualization functions for spatial data and interactions
-- tools: Utility functions for preprocessing, analysis, and graph operations
 """
 
 from ._version import __version__, __version_info__
 
 __author__ = "Casei Development Team"
 
-# Import main modules
+# Import main modules with standard aliases
 from . import models
-from . import plotting as pl
 from . import tools as tl
+from . import plotting as pl
+from . import enrichment as enr
 
 # Import key classes and functions for convenience
 from .models import EdgePredictionMLP
+
+# Tools
 from .tools import (
     preprocess_adata,
     set_random_seed,
@@ -30,17 +34,32 @@ from .tools import (
     contrast_gene_interactions,
     store_edge_confidence_matrix,
 )
+
+# Plotting
 from .plotting import (
     plot_differential_heatmap,
     plot_gene_network,
     plot_edge_comparison,
     plot_edges_per_sample,
+    plot_edges_on_umap,
+    plot_edges_grid_umap,
+    compare_conditions_edges_umap,
+    compare_neighborhood_enrichment,
+    analyze_interaction_drivers,
+)
+
+# Enrichment
+from .enrichment import (
+    run_enrichment_analysis,
+    decompose_differential_matrix,
+    contrast_gene_gene_interactions,
 )
 
 __all__ = [
     "models",
-    "pl",
     "tl",
+    "pl",
+    "enr",
     "EdgePredictionMLP",
     "preprocess_adata",
     "set_random_seed",
@@ -51,4 +70,12 @@ __all__ = [
     "plot_gene_network",
     "plot_edge_comparison",
     "plot_edges_per_sample",
+    "plot_edges_on_umap",
+    "plot_edges_grid_umap",
+    "compare_conditions_edges_umap",
+    "compare_neighborhood_enrichment",
+    "analyze_interaction_drivers",
+    "run_enrichment_analysis",
+    "decompose_differential_matrix",
+    "contrast_gene_gene_interactions",
 ]
