@@ -1,9 +1,6 @@
 """
 Tools for Preprocessing, Training, and Analysis
 =================================================
-
-Utility functions for data preparation, model training, edge prediction,
-and differential interaction analysis.
 """
 
 from ._preprocessing import preprocess_adata, set_random_seed
