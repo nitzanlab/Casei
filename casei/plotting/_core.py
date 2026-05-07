@@ -298,7 +298,175 @@ def compare_neighborhood_enrichment(
 ) -> Tuple[Optional[AnnData], AnnData]:
     """
     Compare neighborhood enrichment between case-adjusted and spatial graphs.
+
+    Creates side-by-side heatmaps showing z-scores for:
+    1. Case-adjusted graph (from edge confidence matrix)
+    2. Spatial graph (geometric neighbors)
+
+    Parameters
+    ----------
+    adata : AnnData
+        Annotated data object with edge confidence matrix
+    cluster_key : str, optional (default: "celltype")
+        Key in adata.obs for cell type clustering
+    uns_key : str, optional (default: "edge_conf_matrix_sparse")
+        Key for edge confidence matrix in adata.uns
+    condition : str, optional
+        Specific condition to analyze (if None, uses all cells)
+    condition_key : str, optional (default: "condition")
+        Key in adata.obs for conditions
+    figsize : tuple, optional (default: (16, 7))
+        Figure size
+    save_path : str, optional
+        Path to save the figure
+
+    Returns
+    -------
+    adata_custom : AnnData or None
+        AnnData with case-adjusted graph enrichment results
+    adata_spatial : AnnData
+        AnnData with spatial graph enrichment results
     """
     import squidpy as sq
-    # Enrichment logic and large-font plotting as provided...
-    return None, None
+    from scipy.sparse import csr_matrix
+
+    # Subset by condition if specified
+    if condition is not None:
+        if condition_key not in adata.obs.columns:
+            raise KeyError(f"'{condition_key}' not found in adata.obs")
+        if condition not in adata.obs[condition_key].unique():
+            raise ValueError(
+                f"Condition '{condition}' not found. "
+                f"Available: {adata.obs[condition_key].unique()}"
+            )
+        adata_cond = adata[adata.obs[condition_key] == condition].copy()
+        print(f"📊 Processing {len(adata_cond)} cells for condition: {condition}")
+    else:
+        adata_cond = adata.copy()
+        condition = "all"
+        print(f"📊 Processing {len(adata_cond)} cells (all conditions)")
+
+    # -----------------------
+    # 1. Case-adjusted graph
+    # -----------------------
+    conf_matrix = adata.uns[uns_key]
+    idx = adata.obs.index.get_indexer(adata_cond.obs.index)
+    idx = idx[idx >= 0]
+
+    if len(idx) == 0:
+        raise ValueError(f"No cells from condition '{condition}' found in conf_matrix")
+
+    sub_conf = conf_matrix[idx, :][:, idx]
+
+    if sub_conf.shape[0] == 0 or sub_conf.nnz == 0:
+        print(f"⚠️ Skipping case-adjusted graph: no edges for condition '{condition}'")
+        adata_custom = None
+    else:
+        adata_custom = adata_cond.copy()
+        adata_custom.obsp["spatial_connectivities"] = sub_conf.astype("float32")
+
+        max_conf = sub_conf.max()
+        if max_conf > 0:
+            norm_conf = sub_conf.multiply(1.0 / max_conf)
+            dist_matrix = norm_conf.copy()
+            dist_matrix.data = 1.0 - dist_matrix.data
+            adata_custom.obsp["distances"] = dist_matrix
+        else:
+            adata_custom.obsp["distances"] = sub_conf.copy()
+
+        adata_custom = adata_custom[~adata_custom.obs[cluster_key].isna()].copy()
+        print(f"   Cell types: {adata_custom.obs[cluster_key].nunique()}")
+
+        sq.gr.nhood_enrichment(adata_custom, cluster_key=cluster_key)
+
+    # -----------------------
+    # 2. Spatial graph
+    # -----------------------
+    adata_spatial = adata_cond.copy()
+    adata_spatial = adata_spatial[~adata_spatial.obs[cluster_key].isna()].copy()
+    sq.gr.spatial_neighbors(adata_spatial)
+    sq.gr.nhood_enrichment(adata_spatial, cluster_key=cluster_key)
+
+    # -----------------------
+    # 3. Plotting
+    # -----------------------
+    fig, axes = plt.subplots(1, 2, figsize=figsize)
+
+    sns.set_style("white")
+    plt.rcParams['font.size'] = 18
+    plt.rcParams['axes.labelsize'] = 20
+    plt.rcParams['axes.titlesize'] = 22
+    plt.rcParams['xtick.labelsize'] = 16
+    plt.rcParams['ytick.labelsize'] = 16
+
+    cmap = sns.diverging_palette(250, 10, as_cmap=True)
+
+    # Plot 1: Case-adjusted graph
+    if adata_custom is not None:
+        ax1 = axes[0]
+        z_score = adata_custom.uns[f"{cluster_key}_nhood_enrichment"]["zscore"]
+        cell_types = adata_custom.obs[cluster_key].cat.categories.tolist()
+
+        vmax = max(abs(z_score.min()), abs(z_score.max()))
+        vmin = -vmax
+
+        im1 = ax1.imshow(z_score, cmap=cmap, vmin=vmin, vmax=vmax, aspect='auto')
+        ax1.set_xticks(range(len(cell_types)))
+        ax1.set_yticks(range(len(cell_types)))
+        ax1.set_xticklabels(cell_types, rotation=45, ha='right', fontsize=20)
+        ax1.set_yticklabels(cell_types, fontsize=20)
+        ax1.set_title(f'Case-adjusted graph\n({condition.capitalize()})', fontweight='bold', pad=20, fontsize=26)
+        ax1.set_xlabel(' ', fontweight='bold', fontsize=24)
+        ax1.set_ylabel(' ', fontweight='bold', fontsize=24)
+
+        cbar1 = plt.colorbar(im1, ax=ax1, fraction=0.046, pad=0.04)
+        cbar1.set_label('Z-score', rotation=270, labelpad=25, fontweight='bold', fontsize=20)
+        cbar1.ax.tick_params(labelsize=20)
+
+        ax1.set_xticks([x - 0.5 for x in range(1, len(cell_types))], minor=True)
+        ax1.set_yticks([y - 0.5 for y in range(1, len(cell_types))], minor=True)
+        ax1.grid(which='minor', color='white', linestyle='-', linewidth=1.5)
+    else:
+        axes[0].text(0.5, 0.5, 'No Case-adjusted graph data', ha='center', va='center',
+                     transform=axes[0].transAxes, fontsize=20)
+        axes[0].set_title(f'Case-adjusted graph\n({condition.capitalize()})', fontweight='bold', fontsize=22)
+        axes[0].axis('off')
+
+    # Plot 2: Spatial graph
+    ax2 = axes[1]
+    z_score_spatial = adata_spatial.uns[f"{cluster_key}_nhood_enrichment"]["zscore"]
+    cell_types_spatial = adata_spatial.obs[cluster_key].cat.categories.tolist()
+
+    vmax = max(abs(np.nanmin(z_score_spatial)), abs(np.nanmax(z_score_spatial)))
+    vmin = -vmax
+
+    im2 = ax2.imshow(z_score_spatial, cmap=cmap, vmin=vmin, vmax=vmax, aspect='auto')
+    ax2.set_xticks(range(len(cell_types_spatial)))
+    ax2.set_yticks(range(len(cell_types_spatial)))
+    ax2.set_xticklabels(cell_types_spatial, rotation=45, ha='right', fontsize=20)
+    ax2.set_yticklabels(cell_types_spatial, fontsize=20)
+    ax2.set_title(f'Spatial graph\n({condition.capitalize()})', fontweight='bold', pad=20, fontsize=26)
+    ax2.set_xlabel(' ', fontweight='bold', fontsize=24)
+    ax2.set_ylabel(' ', fontweight='bold', fontsize=24)
+
+    cbar2 = plt.colorbar(im2, ax=ax2, fraction=0.046, pad=0.04)
+    cbar2.set_label('Z-score', rotation=270, labelpad=25, fontweight='bold', fontsize=24)
+    cbar2.ax.tick_params(labelsize=20)
+
+    ax2.set_xticks([x - 0.5 for x in range(1, len(cell_types_spatial))], minor=True)
+    ax2.set_yticks([y - 0.5 for y in range(1, len(cell_types_spatial))], minor=True)
+    ax2.grid(which='minor', color='white', linestyle='-', linewidth=1.5)
+
+    fig.suptitle(
+        f'Neighborhood Enrichment Analysis: {condition.capitalize()}',
+        fontsize=24, fontweight='bold', y=1.02
+    )
+
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
+        print(f"💾 Saved: {save_path}")
+
+    plt.show()
+    return adata_custom, adata_spatial
