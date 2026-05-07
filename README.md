@@ -159,12 +159,14 @@ ruff check casei/
 If you use Casei in your research, please cite:
 
 ```bibtex
-@software{casei2025,
-  title  = {Casei: Spatial Transcriptomics Edge Prediction and Analysis},
-  year   = {2025},
-  url    = {https://github.com/casei-dev/casei}
-}
-```
+@article{Karin2026.05.03.722470,
+  author = {Karin, Jonathan and Friedman, Roy and Nitzan, Mor},
+  title = {Decoding Condition-Specific Cellular Crosstalk in Spatial Omics via Bilinear Edge Classification},
+  year = {2026},
+  doi = {10.64898/2026.05.03.722470},
+  publisher = {bioRxiv},
+  journal = {bioRxiv}
+}```
 
 ---
 
