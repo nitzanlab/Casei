@@ -26,9 +26,9 @@ pip install casei
 ### From source (development)
 
 ```bash
-git clone https://github.com/casei-dev/casei.git
+git clone https://github.com/nitzanlab/Casei.git
 cd casei
-pip install -e ".[dev]"
+pip install .
 ```
 
 ### Requirements
